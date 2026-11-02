@@ -1,6 +1,11 @@
 # Sorting-challenge
 
 Competição para organização de uma lista em tempo mínimo com o objetivo de realizar a Implementação e otimização de algoritmos de ordenação em linguagem C para ordenar uma base volumosa de dados no menor tempo de processamento possível. <br />
+O algoritmo ultilizado foi **Counting Sort** de Complexidade: <br />
+
+      Temporal: O(m+n) em todos os casos; <br />
+      Espaço: O(n+m) que não foi um requisito; <br />
+
 
 ============== INSTRUÇÕES DE COMPILAÇÃO ================== <br />
 
