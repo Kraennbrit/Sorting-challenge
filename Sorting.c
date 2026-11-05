@@ -1,17 +1,6 @@
 /*
- * Sorting.c - Desafio de ordenação (menor tempo de execução)
+ * Algoritmo: Counting Sort com Radix Sort (LSD)
  *
- * Estratégia: Counting Sort, com Radix Sort (LSD) como plano B quando o
- * intervalo de valores é grande demais para o vetor de contagem.
- *
- * Fluxo do programa:
- *   1. Lê todos os inteiros do arquivo de entrada (fora do cronômetro).
- *   2. Ordena o vetor em memória (única parte cronometrada, com clock()).
- *   3. Verifica se o resultado está em ordem crescente (fora do cronômetro).
- *   4. Grava o vetor ordenado no arquivo de saída (fora do cronômetro).
- *
- * Compilação:  gcc -O2 -o counting_sort Sorting.c
- * Execução:    ./counting_sort [arquivo_entrada] [arquivo_saida]
  */
 
 #include <limits.h>
@@ -24,25 +13,18 @@
 #include <errno.h>
 #include <ctype.h>
 
-/* Nomes de arquivo usados quando nenhum argumento é informado. */
 #define ARQUIVO_ENTRADA_PADRAO "listaOdenada.txt"
 #define ARQUIVO_SAIDA_PADRAO   "listaOrdenada_saida.txt"
 
-/* Capacidade inicial do vetor de números; dobra quando enche. */
+// Capacidade inicial do vetor de números;
 #define CAPACIDADE_INICIAL 1024
 
-/* O Counting Sort só é usado se o intervalo (max - min + 1) for no máximo
- * FATOR_INTERVALO vezes o número de elementos. Acima disso, o vetor de
- * contagem fica grande e lento demais, e o Radix Sort passa a compensar. */
+// O Counting Sort só é usado se o intervalo (max - min + 1) for no máximo
+
 #define FATOR_INTERVALO 8
 
-/* ------------------------------------------------------------------ */
-/* Leitura                                                            */
-/* ------------------------------------------------------------------ */
 
-/* Lê todos os inteiros do arquivo 'caminho' (qualquer separador não numérico).
- * Devolve um vetor alocado com malloc (quem chama deve dar free) e grava a
- * quantidade de números em *n. Devolve NULL em caso de erro. */
+/* Isso Lê todos os inteiros do arquivo e grava a quantidade de números em *n.  */
 static int *ler_lista(const char *caminho, size_t *n)
 {
     FILE *f = fopen(caminho, "rb");
@@ -51,8 +33,8 @@ static int *ler_lista(const char *caminho, size_t *n)
         return NULL;
     }
 
-    /* Descobre o tamanho do arquivo para lê-lo de uma só vez (bem mais
-     * rápido do que chamar fscanf milhões de vezes). */
+    // Lê o arquivo uma vez só
+
     if (fseek(f, 0, SEEK_END) != 0) { perror(caminho); fclose(f); return NULL; }
     long tamanho = ftell(f);
     if (tamanho < 0)                { perror(caminho); fclose(f); return NULL; }
@@ -83,15 +65,13 @@ static int *ler_lista(const char *caminho, size_t *n)
 
     const char *p = texto;
     while (*p) {
-        /* Pula tudo que não é início de número (espaços, quebras de linha...). */
+        // Pula não números
         while (*p && *p != '-' && (*p < '0' || *p > '9')) p++;
         if (!*p) break;
 
         int negativo = 0;
         if (*p == '-') { negativo = 1; p++; }
 
-        /* Converte os dígitos. Usa long long e confere o limite de int para
-         * não corromper valores silenciosamente. */
         long long valor = 0;
         while (*p >= '0' && *p <= '9') {
             valor = valor * 10 + (*p++ - '0');
@@ -110,7 +90,7 @@ static int *ler_lista(const char *caminho, size_t *n)
             return NULL;
         }
 
-        /* Cresce o vetor dobrando a capacidade quando necessário. */
+        /* Cresce o vetor dobrando a capacidade. */
         if (qtd == capacidade) {
             capacidade *= 2;
             int *novo = realloc(numeros, capacidade * sizeof *numeros);
@@ -130,30 +110,24 @@ static int *ler_lista(const char *caminho, size_t *n)
     return numeros;
 }
 
-/* ------------------------------------------------------------------ */
-/* Algoritmos de ordenação                                            */
-/* ------------------------------------------------------------------ */
 
-/* Counting Sort: O(n + m), com m = max - min + 1.
- * Conta quantas vezes cada valor aparece e reescreve o vetor em ordem.
- * Devolve 0 em sucesso e -1 se faltar memória. */
+// ALGORITMO PRINCIPAL QUE REALIZA A ORDENAÇÃO
+
 static int counting_sort(int *a, size_t n, int min, int max)
 {
     size_t m = (size_t)((long long)max - min + 1);
 
-    /* Contadores de 32 bits ocupam metade da memória de size_t e cabem
-     * melhor no cache. calloc já entrega tudo zerado. */
     uint32_t *contagem = calloc(m, sizeof *contagem);
     if (!contagem) {
         fprintf(stderr, "Sem memoria para o vetor de contagem.\n");
         return -1;
     }
 
-    /* O valor min vira o índice 0 (isso permite números negativos). */
+    /* Permite Numeros Negativos. */
     for (size_t i = 0; i < n; i++)
         contagem[(size_t)((long long)a[i] - min)]++;
 
-    /* Reescreve o vetor original, valor por valor, na ordem crescente. */
+    /*Rescreve o Vetor */
     size_t k = 0;
     for (size_t v = 0; v < m; v++) {
         int valor = (int)((long long)v + min);
@@ -165,9 +139,9 @@ static int counting_sort(int *a, size_t n, int min, int max)
     return 0;
 }
 
-/* Radix Sort LSD: 4 passadas de 8 bits, O(n). Plano B para quando o
- * intervalo de valores é grande. Inverter o bit de sinal faz os negativos
- * ficarem antes dos positivos. Devolve 0 em sucesso e -1 sem memória. */
+//Fallback 
+
+
 static int radix_sort(int *a, size_t n)
 {
     int *temp = malloc(n * sizeof *temp);
@@ -187,7 +161,7 @@ static int radix_sort(int *a, size_t n)
             contagem[(chave >> deslocamento) & 0xFF]++;
         }
 
-        /* Soma acumulada: posição inicial de cada "balde" no destino. */
+        
         size_t posicao = 0;
         for (int b = 0; b < 256; b++) {
             size_t c = contagem[b];
@@ -195,7 +169,7 @@ static int radix_sort(int *a, size_t n)
             posicao += c;
         }
 
-        /* Distribuição estável (mantém a ordem das passadas anteriores). */
+      
         for (size_t i = 0; i < n; i++) {
             unsigned chave = (unsigned)origem[i] ^ 0x80000000u;
             destino[contagem[(chave >> deslocamento) & 0xFF]++] = origem[i];
@@ -204,13 +178,13 @@ static int radix_sort(int *a, size_t n)
         int *troca = origem; origem = destino; destino = troca;
     }
 
-    /* Após 4 passadas (número par), o resultado já está de volta em 'a'. */
+   
     free(temp);
     return 0;
 }
 
-/* Escolhe o algoritmo conforme os dados e ordena 'a' no próprio vetor.
- * Devolve 0 em sucesso e -1 em caso de erro. */
+
+
 static int ordenar(int *a, size_t n)
 {
     if (n < 2) return 0;
@@ -230,11 +204,6 @@ static int ordenar(int *a, size_t n)
     return radix_sort(a, n);
 }
 
-/* ------------------------------------------------------------------ */
-/* Verificação e escrita                                              */
-/* ------------------------------------------------------------------ */
-
-/* Devolve 1 se o vetor está em ordem crescente, 0 caso contrário. */
 static int esta_ordenado(const int *a, size_t n)
 {
     for (size_t i = 1; i < n; i++)
@@ -242,7 +211,7 @@ static int esta_ordenado(const int *a, size_t n)
     return 1;
 }
 
-/* Grava um número por linha em 'caminho'. Devolve 0 em sucesso, -1 em erro. */
+
 static int gravar_lista(const char *caminho, const int *a, size_t n)
 {
     FILE *f = fopen(caminho, "w");
@@ -256,21 +225,19 @@ static int gravar_lista(const char *caminho, const int *a, size_t n)
     return 0;
 }
 
-/* ------------------------------------------------------------------ */
-/* Programa principal                                                 */
-/* ------------------------------------------------------------------ */
+// Main
 
 int main(int argc, char **argv)
 {
     const char *entrada = argc > 1 ? argv[1] : ARQUIVO_ENTRADA_PADRAO;
     const char *saida   = argc > 2 ? argv[2] : ARQUIVO_SAIDA_PADRAO;
 
-    /* 1. Leitura (não entra na medição). */
+    // Leitura 
     size_t n = 0;
     int *a = ler_lista(entrada, &n);
     if (!a) return 1;
 
-    /* 2. Ordenação: somente este trecho é cronometrado. */
+    // Ordenação
     clock_t inicio = clock();
     int erro = ordenar(a, n);
     clock_t fim = clock();
@@ -283,14 +250,14 @@ int main(int argc, char **argv)
     double segundos = (double)(fim - inicio) / CLOCKS_PER_SEC;
     printf("Tempo de ordenacao: %f segundos (%f ms)\n", segundos, segundos * 1000.0);
 
-    /* 3. Verificação de corretude (fora da medição). */
+    // Ver se ele ocorreu certo
     if (!esta_ordenado(a, n)) {
         fprintf(stderr, "ERRO: o vetor nao ficou ordenado.\n");
         free(a);
         return 1;
     }
 
-    /* 4. Gravação do resultado (fora da medição). */
+    // Grava A lista ordenada
     if (gravar_lista(saida, a, n) != 0) {
         free(a);
         return 1;
