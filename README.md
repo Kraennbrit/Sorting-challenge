@@ -6,12 +6,24 @@ O algoritmo ultilizado foi **Counting Sort** de Complexidade: <br />
       Temporal: O(m+n) em todos os casos; <br />
       Espaço: O(n+m) que não foi um requisito; <br />
 
+Quando o intervalo dos valores (m = max - min + 1) é muito maior que a quantidade de números (m > 4n + 2^20), o programa usa automaticamente o **Radix Sort** (base 256) como reserva: <br />
+
+      Temporal: O(n); <br />
+      Espaço: O(n), independente do intervalo dos valores; <br />
+
 
 ============== INSTRUÇÕES DE COMPILAÇÃO ================== <br />
 
-A lista à ser ordenada deve ser um .txt no mesmo diretório onde o executável está. <br />
+A lista à ser ordenada deve ser um .txt no mesmo diretório onde o executável está, com um número inteiro por linha. <br />
 Compilar -> gcc -O2 -o counting_sort Sorting.c <br />
 Executar -> ./counting_sort <br />
+
+Opcional, informando os arquivos de entrada e saída: <br />
+Executar -> ./counting_sort entrada.txt saida.txt <br />
+
+Sem argumentos, a entrada é listaOdenada.txt e a saída é listaOrdenada_saida.txt. <br />
+
+Se o arquivo tiver um valor que não seja inteiro ou que não caiba em int, o programa informa o arquivo e a linha do erro e termina com código de saída 1. <br />
 
 ======================================================= <br />
 

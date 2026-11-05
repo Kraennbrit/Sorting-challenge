@@ -19,6 +19,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdint.h>
+#include <limits.h>
+#include <errno.h>
+#include <ctype.h>
 
 /* Nomes de arquivo usados quando nenhum argumento é informado. */
 #define ARQUIVO_ENTRADA_PADRAO "listaOdenada.txt"
