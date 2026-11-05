@@ -21,7 +21,7 @@ Executar -> ./counting_sort <br />
 Opcional, informando os arquivos de entrada e saída: <br />
 Executar -> ./counting_sort entrada.txt saida.txt <br />
 
-Sem argumentos, a entrada é listaOdenada.txt e a saída é listaOrdenada_saida.txt. <br />
+A entrada é listaOdenada.txt e a saída é listaOrdenada_saida.txt. <br />
 
 Se o arquivo tiver um valor que não seja inteiro ou que não caiba em int, o programa informa o arquivo e a linha do erro e termina com código de saída 1. <br />
 
